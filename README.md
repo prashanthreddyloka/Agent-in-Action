@@ -1,25 +1,35 @@
 # LangGraph Triage Agent
 
-A minimal LangGraph agent that classifies support tickets, fetches order status, and drafts replies.
-Built with LangGraph, LangChain, and FastAPI.
+Minimal LangGraph + FastAPI service that:
+1) classifies a support ticket,
+2) fetches a fake order record (when an order ID is available),
+3) drafts a reply, then pauses for Admin approval.
 
 ## Setup
 
-1. **Clone the repository** (if not already done).
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. **Environment Variables**:
-   Create a `.env` file with your OpenAI API key:
-   ```env
-   OPENAI_API_KEY=sk-...
-   ```
-   (Optional) For tracing:
-   ```env
-   LANGCHAIN_TRACING_V2=true
-   LANGCHAIN_API_KEY=lsv2-...
-   ```
+```bash
+pip install -r requirements.txt
+```
+
+Create `.env`:
+
+```env
+OPENAI_API_KEY=sk-...
+# Optional tracing
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=lsv2-...
+```
+
+## Architecture
+
+**State:** `messages`, `ticket_text`, `order_id`, `issue_type`, `evidence`, `recommendation`
+
+**Nodes:**
+- `ingest` → prepares state
+- `classify_issue` → determines issue_type + extracts order_id if missing
+- `fetch_order` (ToolNode) → looks up fake order data
+- `draft_reply` → drafts the response
+- `human_review` → Admin approves/rejects before finalize
 
 ## Usage
 
@@ -28,56 +38,10 @@ Built with LangGraph, LangChain, and FastAPI.
 uvicorn app.server:app --reload
 ```
 
-### Test via Curl
-Use the provided script:
+### Test via Curl (HITL)
 ```bash
 ./curl_example.sh
 ```
-
-Or manually:
-```bash
-curl -X POST "http://localhost:8000/triage/invoke" \
-     -H "Content-Type: application/json" \
-     -d '{"ticket_text": "Where is my order #12345?"}'
-```
-
-## Testing
-
-Run unit tests:
-```bash
-pytest tests/
-```
-
-## Architecture
-
-- **State**: Tracks messages, ticket text, issued type, order ID, etc.
-- **Nodes**:
-  - `ingest`: Prepares state.
-  - `classify_issue`: LLM extraction of issue type and order ID.
-  - `fetch_order`: Tool to lookup fake order status.
-  - `draft_reply`: LLM generation of final response.
-- **Graph**: `ingest` -> `classify` -> (conditional) `fetch_order` -> `draft_reply` -> (interrupt) -> `human_review` -> `finalize`.
-
-## Human-in-the-Loop (HITL) Workflow
-
-The agent now stops before sending the final reply to allow for Admin Approval.
-
-1. **Invoke Triage**:
-   ```bash
-   # Returns a thread_id and pauses at "human_review_node"
-   curl -X POST "http://localhost:8000/triage/invoke" ...
-   ```
-
-2. **Approve or Reject**:
-   ```bash
-   curl -X POST "http://localhost:8000/triage/approve" \
-        -H "Content-Type: application/json" \
-        -d '{
-              "thread_id": "<THREAD_ID_FROM_ABOVE>",
-              "approved": true
-            }'
-   ```
-   If `approved: false`, provide `"feedback": "Change tone to be friendlier"`. The agent will loop back to draft a new reply.
 
 ## Development Process
 
@@ -88,4 +52,3 @@ To complete this assignment efficiently, I utilized an advanced AI coding assist
 2.  **Implementation**: I used the AI to scaffold the initial project structure and implement the core logic iteratively. I reviewed the generated code for the `AgentState` and node logic (`ingest`, `classify`, `draft`) to ensure it aligned with the design.
 3.  **Refactoring for HITL**: To meet the Admin Approval requirement, I refactored the graph to support `thread_id` persistence and interrupt logic, allowing for a seamless "Human-in-the-Loop" workflow.
 4.  **Verification**: I set up unit tests and mocked the necessary tools to verify the end-to-end flow, using a curl script to demonstrate the interaction.
-
