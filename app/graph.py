@@ -1,13 +1,7 @@
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from app.state import AgentState
-from app.nodes import ingest, classify_issue, draft_reply, human_review_node, finalize_response
-from app.tools import fetch_order
-from langgraph.prebuilt import ToolNode
-
-# Tool setup
-tools = [fetch_order]
-tool_node = ToolNode(tools)
+from app.nodes import ingest, classify_issue, draft_reply, human_review_node, finalize_response, execute_order_lookup
 
 # Checkpointer
 checkpointer = MemorySaver()
@@ -15,7 +9,7 @@ checkpointer = MemorySaver()
 def should_fetch_order(state: AgentState):
     order_id = state.get("order_id")
     if order_id:
-        return "tool_node"
+        return "execute_order_lookup"
     return "draft_reply"
 
 def route_human_review(state: AgentState):
@@ -31,7 +25,7 @@ workflow = StateGraph(AgentState)
 
 workflow.add_node("ingest", ingest)
 workflow.add_node("classify_issue", classify_issue)
-workflow.add_node("tool_node", tool_node)
+workflow.add_node("execute_order_lookup", execute_order_lookup)
 workflow.add_node("draft_reply", draft_reply)
 workflow.add_node("human_review_node", human_review_node)
 workflow.add_node("finalize_response", finalize_response)
@@ -44,12 +38,12 @@ workflow.add_conditional_edges(
     "classify_issue",
     should_fetch_order,
     {
-        "tool_node": "tool_node",
+        "execute_order_lookup": "execute_order_lookup",
         "draft_reply": "draft_reply"
     }
 )
 
-workflow.add_edge("tool_node", "draft_reply")
+workflow.add_edge("execute_order_lookup", "draft_reply")
 
 # From draft to human review
 workflow.add_edge("draft_reply", "human_review_node")

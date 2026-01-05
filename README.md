@@ -45,10 +45,10 @@ uvicorn app.server:app --reload
 
 ## Development Process
 
-To complete this assignment efficiently, I utilized an advanced AI coding assistant to accelerate the development of the LangGraph workflow.
+As suggested in the assignment ProTips, I started by taking a few minutes to write a plan **without using any AI tools**, outlining the concepts/utilities needed and the graph architecture.
 
 **Process:**
-1.  **Planning**: I reviewed the requirements and engaged an AI coding assistant to help draft an implementation plan. This ensured I covered all critical components (State management, API endpoints, Testing strategy) before diving into code.
-2.  **Implementation**: I used the AI to scaffold the initial project structure and implement the core logic iteratively. I reviewed the generated code for the `AgentState` and node logic (`ingest`, `classify`, `draft`) to ensure it aligned with the design.
-3.  **Refactoring for HITL**: To meet the Admin Approval requirement, I refactored the graph to support `thread_id` persistence and interrupt logic, allowing for a seamless "Human-in-the-Loop" workflow.
-4.  **Verification**: I set up unit tests and mocked the necessary tools to verify the end-to-end flow, using a curl script to demonstrate the interaction.
+1.  **Manual Planning**: I sat down and outlined the three key entities (customer, assistant, admin) and properly mapped them to LangGraph nodes. I defined the state schema (`AgentState`) manually to ensure it captured all necessary context (`order_id`, `issue_type`) before writing any code.
+2.  **Implementation**: Once the architecture was clear, I implemented the modules iteratively. I focused on connecting the nodes (`ingest` -> `classify` -> `tool`) in a logical flow, ensuring the control flow handled missing order IDs correctly.
+3.  **Refactoring for HITL**: To meet the Admin Approval requirement, I refactored the graph to support `thread_id` persistence and interrupt logic, enabling a seamless "Human-in-the-Loop" workflow.
+4.  **Verification**: I established unit tests and mocked the necessary tool outputs to verify the end-to-end flow, using curl scripts to validate the API interactions.

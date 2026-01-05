@@ -4,6 +4,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from app.state import AgentState
+from app.tools import fetch_order
 import json
 
 # Initialize LLM
@@ -55,6 +56,14 @@ def classify_issue(state: AgentState):
         print(f"Error in classification: {e}")
         return {"issue_type": "other", "order_id": None}
 
+def execute_order_lookup(state: AgentState):
+    """
+    Manually executes the fetch_order tool logic.
+    """
+    order_id = state.get("order_id")
+    result = fetch_order.invoke({"order_id": order_id})
+    return {"evidence": result}
+
 def draft_reply(state: AgentState):
     """
     Drafts a reply based on the gathered information.
@@ -63,10 +72,8 @@ def draft_reply(state: AgentState):
     order_id = state.get("order_id")
     human_feedback = state.get("human_feedback")
     
-    tool_output = None
-    messages = state.get("messages", [])
-    if messages and messages[-1].type == 'tool':
-         tool_output = messages[-1].content
+    # Use evidence instead of message history for tool output
+    tool_output = state.get("evidence")
     
     system_prompt = f"""You are a customer support agent.
     Issue Type: {issue_type}
@@ -88,9 +95,6 @@ def draft_reply(state: AgentState):
     response = chain.invoke({"text": state.get("ticket_text", "")})
     
     # We don't add to messages yet, allows revision. We store in recommendation.
-    # But for the graph state history, usually we append messages. 
-    # Let's keep it in recommendation for the admin to approve.
-    # The final node will commit it to messages.
     return {"recommendation": response.content}
 
 def human_review_node(state: AgentState):
