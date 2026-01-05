@@ -1,4 +1,4 @@
-# LangGraph Triage Agent
+# LangGraph Agent
 
 Minimal LangGraph + FastAPI service that:
 1) classifies a support ticket,
@@ -14,10 +14,9 @@ pip install -r requirements.txt
 Create `.env`:
 
 ```env
-OPENAI_API_KEY=sk-...
-# Optional tracing
+OPENAI_API_KEY=...
 LANGCHAIN_TRACING_V2=true
-LANGCHAIN_API_KEY=lsv2-...
+LANGCHAIN_API_KEY=...
 ```
 
 ## Architecture
@@ -25,11 +24,11 @@ LANGCHAIN_API_KEY=lsv2-...
 **State:** `messages`, `ticket_text`, `order_id`, `issue_type`, `evidence`, `recommendation`
 
 **Nodes:**
-- `ingest` → prepares state
-- `classify_issue` → determines issue_type + extracts order_id if missing
-- `fetch_order` (ToolNode) → looks up fake order data
-- `draft_reply` → drafts the response
-- `human_review` → Admin approves/rejects before finalize
+- ingest → prepares state
+- classify_issue → determines issue_type + extracts order_id if missing
+- fetch_order (ToolNode) → looks up fake order data
+- draft_reply → drafts the response
+- human_review → Admin approves/rejects before finalize
 
 ## Usage
 
@@ -44,10 +43,6 @@ uvicorn app.server:app --reload
 ```
 
 ## Development Process
-
-As suggested in the assignment ProTips, I started by taking a few minutes to write a plan **without using any AI tools**, outlining the concepts/utilities needed and the graph architecture.
-
-**Process:**
 1.  **Manual Planning**: I sat down and outlined the three key entities (customer, assistant, admin) and properly mapped them to LangGraph nodes. I defined the state schema (`AgentState`) manually to ensure it captured all necessary context (`order_id`, `issue_type`) before writing any code.
 2.  **Implementation**: Once the architecture was clear, I implemented the modules iteratively. I focused on connecting the nodes (`ingest` -> `classify` -> `tool`) in a logical flow, ensuring the control flow handled missing order IDs correctly.
 3.  **Refactoring for HITL**: To meet the Admin Approval requirement, I refactored the graph to support `thread_id` persistence and interrupt logic, enabling a seamless "Human-in-the-Loop" workflow.
