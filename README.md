@@ -33,11 +33,12 @@ LANGCHAIN_API_KEY=...
 ## Usage
 
 ### Run the Server
+Terminal - 1
 ```
 py -m uvicorn app.server:app --port 8080
 ```
-
-### Test via Curl (HITL)
+### Test via Curl
+**Terminal - 2**
 This is for invoking the issue
 ```
 curl.exe -X POST http://localhost:8080/triage/invoke -H "Content-Type: application/json" -d "@invoke.json"
