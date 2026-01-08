@@ -33,15 +33,19 @@ LANGCHAIN_API_KEY=...
 ## Usage
 
 ### Run the Server
-```bash
-uvicorn app.server:app --reload
+```
+py -m uvicorn app.server:app --port 8080
 ```
 
 ### Test via Curl (HITL)
-```bash
-./curl_example.sh
+This is for invoking the issue
 ```
-
+curl.exe -X POST http://localhost:8080/triage/invoke -H "Content-Type: application/json" -d "@invoke.json"
+```
+approving the issue
+```
+curl.exe -X POST http://localhost:8080/triage/invoke -H "Content-Type: application/json" -d "@approve.json"
+```
 ## Development Process
 1.  **Manual Planning**: I sat down and outlined the three key entities (customer, assistant, admin) and properly mapped them to LangGraph nodes. I defined the state schema (`AgentState`) manually to ensure it captured all necessary context (`order_id`, `issue_type`) before writing any code.
 2.  **Implementation**: Once the architecture was clear, I implemented the modules iteratively. I focused on connecting the nodes (`ingest` -> `classify` -> `tool`) in a logical flow, ensuring the control flow handled missing order IDs correctly.
